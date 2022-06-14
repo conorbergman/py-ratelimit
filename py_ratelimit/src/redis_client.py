@@ -1,16 +1,9 @@
-import os
 from typing import Optional
 
 import redis
 import fakeredis
 from datetime import timedelta
-
-from py_ratelimit.src.constants import (
-    ENVIRONMENT,
-    PY_RATELIMIT_REDIS_ADDRESS,
-    PY_RATELIMIT_REDIS_PORT,
-    USING_DJANGO
-)
+from django.conf import settings
 
 
 class RatelimitRedisClient:
@@ -44,22 +37,12 @@ class RatelimitRedisClient:
         """
         Connect to the Redis host with properly configured host, port, and database
         """
-        if os.environ.get(USING_DJANGO, False):
-            from django.conf import settings
-            environment = settings.ENVIRONMENT
-            redis_address = settings.PY_RATELIMIT_REDIS_ADDRESS
-            redis_port = settings.PY_RATELIMIT_REDIS_PORT
-        else:
-            environment = os.environ.get(ENVIRONMENT, "local")
-            redis_address = os.environ.get(PY_RATELIMIT_REDIS_ADDRESS, "local")
-            redis_port = os.environ.get(PY_RATELIMIT_REDIS_PORT, "local")
-
-        if environment == "local":
+        if settings.ENVIRONMENT == "local":
             self._client = fakeredis.FakeRedis(db=0)
         else:
-            host_with_port = redis_address
+            host_with_port = settings.PY_RATELIMIT_REDIS_ADDRESS
             hostname = host_with_port.split(":")[0]
-            self._client = redis.Redis(host=hostname, port=redis_port, db=0)
+            self._client = redis.Redis(host=hostname, port=settings.PY_RATELIMIT_REDIS_PORT, db=0)
 
 
 class RatelimitRedisClientFactory:

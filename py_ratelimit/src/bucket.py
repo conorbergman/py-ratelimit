@@ -3,6 +3,7 @@ from functools import wraps
 from typing import Any, Optional
 
 from rest_framework.request import Request
+from rest_framework.response import Response
 
 from py_ratelimit.src.redis_client import (
     RatelimitRedisClientFactory,
@@ -10,8 +11,11 @@ from py_ratelimit.src.redis_client import (
 )
 
 
-class RateLimitExceeded(Exception):
-    pass
+class RateLimitExceeded(Response):
+    status_code = 429
+
+    def __init__(self, data=None, status=None, template_name=None, headers=None, exception=False, content_type=None):
+        super().__init__(data, status, template_name, headers, exception, content_type)
 
 
 class InvalidRateLimit(Exception):
@@ -26,7 +30,7 @@ def ratelimit(rate: Any = None, burst_limit: Any = None, bucket: Any = None) -> 
         def _wrapped(cls: Any, request: Request, *args: Any, **kw: Any) -> Any:
             ratelimited = bucket.insert(request)
             if ratelimited:
-                raise RateLimitExceeded()
+                return RateLimitExceeded()
             return fn(cls, request, *args, **kw)
 
         return _wrapped
@@ -36,7 +40,7 @@ def ratelimit(rate: Any = None, burst_limit: Any = None, bucket: Any = None) -> 
 
 class Bucket:
     DEFAULT_CAPACITY = 20
-    DEFAULT_LEAK_RATE = 10
+    DEFAULT_LEAK_RATE = "10/m"
     DEFAULT_INTERVAL_IN_SECONDS = 60  # Default rate interval of requests per minute
 
     interval_map = {
@@ -47,7 +51,7 @@ class Bucket:
     }
 
     def __init__(self, rate: str = DEFAULT_LEAK_RATE, burst_limit: int = DEFAULT_CAPACITY, key_fn=lambda req: "") -> None:
-        self.leak_rate, self.interval_s = Bucket._parse_rate_interval(rate) or (Bucket.DEFAULT_LEAK_RATE, Bucket.DEFAULT_INTERVAL_IN_SECONDS)
+        self.leak_rate, self.interval_s = Bucket._parse_rate_interval(rate) if rate else (Bucket.DEFAULT_LEAK_RATE, Bucket.DEFAULT_INTERVAL_IN_SECONDS)
         self.capacity = burst_limit or Bucket.DEFAULT_CAPACITY  # max capacity (burst limit)
         self.client: RatelimitRedisClient = RatelimitRedisClientFactory.get_client()
         self.key_fn = key_fn
@@ -61,12 +65,8 @@ class Bucket:
 
         min_timestamp = now - self.interval_s
 
-        n1 = self.client.length(key)
-
         # Leak requests older than rate interval
         self.client.remove_requests(key, min_timestamp)
-
-        n2 = self.client.length(key)
 
         last_timestamp = self.client.get_last_request(key)
         if not last_timestamp:

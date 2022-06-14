@@ -6,17 +6,21 @@ import pytest
 
 from django.test import RequestFactory
 from django.conf import settings
+from rest_framework.response import Response
 
 from py_ratelimit.src.bucket import (
     Bucket,
     ratelimit,
-    RateLimitExceeded,
 )
 from py_ratelimit.src.redis_client import (
     RatelimitRedisClientFactory,
 )
 
-settings.configure()
+from py_ratelimit.tst import settings_default
+
+settings.configure(default_settings=settings_default)
+pytestmark = pytest.mark.django_db
+
 rf = RequestFactory()
 
 
@@ -48,14 +52,16 @@ def test_bucket_ratelimit_throws_when_full():
 
         @ratelimit(bucket=new_bucket)
         def view(cls, request):
-            return True
+            resp = Response()
+            resp.status_code = 200
+            return resp
 
         freezetime = datetime.datetime.now()
         with freezegun.freeze_time(freezetime):
-            assert view(None, _mock_request(username=username, headers=headers))
-            assert view(None, _mock_request(username=username, headers=headers))
-            with pytest.raises(RateLimitExceeded) as e_info:
-                assert view(None, _mock_request(username=username, headers=headers))
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+            # Rate limited
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
 
     client = RatelimitRedisClientFactory.get_client()
     # Test using rate and burst limit
@@ -63,14 +69,16 @@ def test_bucket_ratelimit_throws_when_full():
 
         @ratelimit(rate="1/m", burst_limit=2)
         def view(cls, request):
-            return True
+            resp = Response()
+            resp.status_code = 200
+            return resp
 
         freezetime = datetime.datetime.now()
         with freezegun.freeze_time(freezetime):
-            assert view(None, _mock_request(username=username, headers=headers))
-            assert view(None, _mock_request(username=username, headers=headers))
-            with pytest.raises(RateLimitExceeded) as e_info:
-                assert view(None, _mock_request(username=username, headers=headers))
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+            # Rate limited
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
 
 
 def test_bucket_ratelimit_empties_high_limit():
@@ -85,24 +93,26 @@ def test_bucket_ratelimit_empties_high_limit():
 
         @ratelimit(rate="10/m", burst_limit=20)
         def view(cls, request):
-            return True
+            resp = Response()
+            resp.status_code = 200
+            return resp
 
         # Fill bucket up to burst limit
         freezetime = datetime.datetime.now()
         with freezegun.freeze_time(freezetime):
             for _ in range(20):
-                assert view(None, _mock_request(username=username, headers=headers))
-            with pytest.raises(RateLimitExceeded) as e_info:
-                assert view(None, _mock_request(username=username, headers=headers))
+                assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+            # Rate limited
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
 
         # Leak at 10 r/s
         unlock_rate_time = freezetime + datetime.timedelta(minutes=1)
         for i in range(10):
             with freezegun.freeze_time(unlock_rate_time + datetime.timedelta(milliseconds=1000 * i / 10)):
-                assert view(None, _mock_request(username=username, headers=headers))
+                assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
         with freezegun.freeze_time(unlock_rate_time + datetime.timedelta(milliseconds=1000 * 9/10)):
-            with pytest.raises(RateLimitExceeded) as e_info:
-                assert view(None, _mock_request(username=username, headers=headers))
+            # Rate limited
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
 
 
 def test_bucket_ratelimit_empties_after_ttl():
@@ -117,18 +127,20 @@ def test_bucket_ratelimit_empties_after_ttl():
 
         @ratelimit(rate="10/m", burst_limit=20)
         def view(cls, request):
-            return True
+            resp = Response()
+            resp.status_code = 200
+            return resp
 
         # Fill bucket up to burst limit
         freezetime = datetime.datetime.now()
         with freezegun.freeze_time(freezetime):
             for _ in range(20):
-                assert view(None, _mock_request(username=username, headers=headers))
+                assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
 
         # Wait for ttl, assert we can burst again
         unlock_rate_time = freezetime + datetime.timedelta(minutes=2)
         with freezegun.freeze_time(unlock_rate_time):
             for _ in range(20):
-                assert view(None, _mock_request(username=username, headers=headers))
-            with pytest.raises(RateLimitExceeded) as e_info:
-                assert view(None, _mock_request(username=username, headers=headers))
+                assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+            # Rate limited
+            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
