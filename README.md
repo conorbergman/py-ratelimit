@@ -12,7 +12,7 @@ https://pypi.org/project/dj-ratelimit/0.1.0/
 
 #### V 0.1.0
 
-- py-ratelimit currently supported for redis backed queue using djangorestframework requests
+- dj-ratelimit currently supported for redis backed queue using djangorestframework requests
 - The following environment variables should be set:
   - ENVIRONMENT
   - DJ_RATELIMIT_REDIS_ADDRESS
