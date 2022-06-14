@@ -8,15 +8,15 @@ from django.test import RequestFactory
 from django.conf import settings
 from rest_framework.response import Response
 
-from py_ratelimit.src.bucket import (
+from dj_ratelimit.src.bucket import (
     Bucket,
     ratelimit,
 )
-from py_ratelimit.src.redis_client import (
+from dj_ratelimit.src.redis_client import (
     RatelimitRedisClientFactory,
 )
 
-from py_ratelimit.tst import settings_default
+from dj_ratelimit.tst import settings_default
 
 settings.configure(default_settings=settings_default)
 pytestmark = pytest.mark.django_db

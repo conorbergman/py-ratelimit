@@ -5,7 +5,7 @@ from typing import Any, Optional
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from py_ratelimit.src.redis_client import (
+from dj_ratelimit.src.redis_client import (
     RatelimitRedisClientFactory,
     RatelimitRedisClient,
 )

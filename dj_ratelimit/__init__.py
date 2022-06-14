@@ -1,5 +1,5 @@
 """
-py_ratelimit.
+dj_ratelimit.
 
 
 """

@@ -40,9 +40,9 @@ class RatelimitRedisClient:
         if settings.ENVIRONMENT == "local":
             self._client = fakeredis.FakeRedis(db=0)
         else:
-            host_with_port = settings.PY_RATELIMIT_REDIS_ADDRESS
+            host_with_port = settings.DJ_RATELIMIT_REDIS_ADDRESS
             hostname = host_with_port.split(":")[0]
-            self._client = redis.Redis(host=hostname, port=settings.PY_RATELIMIT_REDIS_PORT, db=0)
+            self._client = redis.Redis(host=hostname, port=settings.DJ_RATELIMIT_REDIS_PORT, db=0)
 
 
 class RatelimitRedisClientFactory:

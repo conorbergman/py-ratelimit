@@ -1,14 +1,14 @@
 from setuptools import setup
 
 setup(
-    name='py_ratelimit',
+    name='dj_ratelimit',
     version='0.1.0',
     description='',
     url='https://github.com/conorbergman/py-ratelimit',
     author='Conor Bergman',
     author_email='conorbergman@gmail.com',
     license='',
-    packages=['py_ratelimit'],
+    packages=['dj_ratelimit'],
     install_requires=[
         'Django>=4.0.5',
         'djangorestframework>=3.12.4',
