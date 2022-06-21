@@ -58,10 +58,25 @@ def test_bucket_ratelimit_throws_when_full():
 
         freezetime = datetime.datetime.now()
         with freezegun.freeze_time(freezetime):
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 200
+            )
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 200
+            )
             # Rate limited
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 429
+            )
 
     client = RatelimitRedisClientFactory.get_client()
     # Test using rate and burst limit
@@ -75,10 +90,25 @@ def test_bucket_ratelimit_throws_when_full():
 
         freezetime = datetime.datetime.now()
         with freezegun.freeze_time(freezetime):
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 200
+            )
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 200
+            )
             # Rate limited
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 429
+            )
 
 
 def test_bucket_ratelimit_empties_high_limit():
@@ -101,18 +131,42 @@ def test_bucket_ratelimit_empties_high_limit():
         freezetime = datetime.datetime.now()
         with freezegun.freeze_time(freezetime):
             for _ in range(20):
-                assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+                assert (
+                    view(
+                        None, _mock_request(username=username, headers=headers)
+                    ).status_code
+                    == 200
+                )
             # Rate limited
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 429
+            )
 
         # Leak at 10 r/s
         unlock_rate_time = freezetime + datetime.timedelta(minutes=1)
         for i in range(10):
-            with freezegun.freeze_time(unlock_rate_time + datetime.timedelta(milliseconds=1000 * i / 10)):
-                assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
-        with freezegun.freeze_time(unlock_rate_time + datetime.timedelta(milliseconds=1000 * 9/10)):
+            with freezegun.freeze_time(
+                unlock_rate_time + datetime.timedelta(milliseconds=1000 * i / 10)
+            ):
+                assert (
+                    view(
+                        None, _mock_request(username=username, headers=headers)
+                    ).status_code
+                    == 200
+                )
+        with freezegun.freeze_time(
+            unlock_rate_time + datetime.timedelta(milliseconds=1000 * 9 / 10)
+        ):
             # Rate limited
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 429
+            )
 
 
 def test_bucket_ratelimit_empties_after_ttl():
@@ -135,12 +189,27 @@ def test_bucket_ratelimit_empties_after_ttl():
         freezetime = datetime.datetime.now()
         with freezegun.freeze_time(freezetime):
             for _ in range(20):
-                assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+                assert (
+                    view(
+                        None, _mock_request(username=username, headers=headers)
+                    ).status_code
+                    == 200
+                )
 
         # Wait for ttl, assert we can burst again
         unlock_rate_time = freezetime + datetime.timedelta(minutes=2)
         with freezegun.freeze_time(unlock_rate_time):
             for _ in range(20):
-                assert view(None, _mock_request(username=username, headers=headers)).status_code == 200
+                assert (
+                    view(
+                        None, _mock_request(username=username, headers=headers)
+                    ).status_code
+                    == 200
+                )
             # Rate limited
-            assert view(None, _mock_request(username=username, headers=headers)).status_code == 429
+            assert (
+                view(
+                    None, _mock_request(username=username, headers=headers)
+                ).status_code
+                == 429
+            )

@@ -42,7 +42,9 @@ class RatelimitRedisClient:
         else:
             host_with_port = settings.DJ_RATELIMIT_REDIS_ADDRESS
             hostname = host_with_port.split(":")[0]
-            self._client = redis.Redis(host=hostname, port=settings.DJ_RATELIMIT_REDIS_PORT, db=0)
+            self._client = redis.Redis(
+                host=hostname, port=settings.DJ_RATELIMIT_REDIS_PORT, db=0
+            )
 
 
 class RatelimitRedisClientFactory:
