@@ -6,7 +6,7 @@ To install:
 pip install dj-ratelimit
 ```
 
-https://pypi.org/project/dj-ratelimit/0.1.0/
+https://pypi.org/project/dj-ratelimit/0.1.5/
 
 ### Requirements
 

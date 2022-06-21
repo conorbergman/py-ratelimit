@@ -16,7 +16,7 @@ DOCLINES = (__doc__ or "").split("\n")
 
 setup(
     name="dj_ratelimit",
-    version="0.1.4",
+    version="0.1.5",
     description="Redis backed library implementing a django ratelimit",
     long_description="\n".join(DOCLINES[2:]),
     url="https://github.com/conorbergman/py-ratelimit",
