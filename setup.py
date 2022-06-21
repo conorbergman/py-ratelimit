@@ -26,6 +26,7 @@ setup(
     packages=[
         "dj_ratelimit",
         "dj_ratelimit.tst",
+        "dj_ratelimit.src",
     ],
     install_requires=[
         "Django>=4.0.5",
